@@ -1,5 +1,5 @@
 """
-🎯 Amazon Fake Review Detector
+🎯 Fake Review Detector
 - Single review detection
 - Batch analysis from Amazon product URL
 - Uses trained models from models_1M_pkl/
@@ -19,7 +19,7 @@ from nltk.stem import PorterStemmer
 st.set_page_config(page_title="Amazon Review Analyzer", page_icon="🔍", layout="wide")
 
 # Constants
-MODELS_DIR = "models_1M_pkl"
+MODELS_DIR = "models_1Ms_pkl"
 SCRAPER_API_KEY = "2e3a0b27898501a44e5f18eff3e1775d"
 ps = PorterStemmer()
 
@@ -191,7 +191,7 @@ def fetch_amazon_reviews(asin):
 
 # ==================== STREAMLIT UI ====================
 
-st.title("🔍 Amazon Fake Review Detector")
+st.title("Fake Review Detector")
 st.markdown("**Detect fake reviews using ML models trained on 1M+ reviews**")
 st.markdown("---")
 

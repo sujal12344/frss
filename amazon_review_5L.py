@@ -1,5 +1,5 @@
 """
-🎯 Amazon Fake Review Detector
+🎯 Fake Review Detector
 - Single review detection
 - Batch analysis from Amazon product URL
 - Uses trained models from models_5L_pkl/
@@ -191,7 +191,7 @@ def fetch_amazon_reviews(asin):
 
 # ==================== STREAMLIT UI ====================
 
-st.title("🔍 Amazon Fake Review Detector")
+st.title("Fake Review Detector")
 st.markdown("**Detect fake reviews using ML models trained on 5L+ reviews**")
 st.markdown("---")
 
@@ -213,6 +213,7 @@ use_ensemble = st.sidebar.checkbox("🤖 Use Ensemble (Majority Vote)", value=Tr
 selected_model = st.sidebar.selectbox(
     "📊 Single Model (if not ensemble)", list(models.keys())
 )
+print(len(models))
 show_model_details = st.sidebar.checkbox("📈 Show Model Performance", value=False)
 
 if show_model_details and metrics:

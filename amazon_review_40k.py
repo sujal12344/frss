@@ -1,5 +1,5 @@
 """
-🎯 Amazon Fake Review Detector
+🎯 Fake Review Detector
 - Single review detection
 - Batch analysis from Amazon product URL
 - Uses trained models from models_40k_pkl/
@@ -191,7 +191,7 @@ def fetch_amazon_reviews(asin):
 
 # ==================== STREAMLIT UI ====================
 
-st.title("🔍 Amazon Fake Review Detector")
+st.title("Fake Review Detector")
 st.markdown("**Detect fake reviews using ML models trained on 40K+ reviews**")
 st.markdown("---")
 
