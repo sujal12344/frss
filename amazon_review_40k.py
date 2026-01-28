@@ -2,7 +2,7 @@
 🎯 Amazon Fake Review Detector
 - Single review detection
 - Batch analysis from Amazon product URL
-- Uses trained models from models_5L_pkl/
+- Uses trained models from models_40k_pkl/
 """
 
 import os
@@ -19,7 +19,7 @@ from nltk.stem import PorterStemmer
 st.set_page_config(page_title="Amazon Review Analyzer", page_icon="🔍", layout="wide")
 
 # Constants
-MODELS_DIR = "models_5L_pkl"
+MODELS_DIR = "models_40k_pkl"
 SCRAPER_API_KEY = "2e3a0b27898501a44e5f18eff3e1775d"
 ps = PorterStemmer()
 
@@ -192,7 +192,7 @@ def fetch_amazon_reviews(asin):
 # ==================== STREAMLIT UI ====================
 
 st.title("🔍 Amazon Fake Review Detector")
-st.markdown("**Detect fake reviews using ML models trained on 5L+ reviews**")
+st.markdown("**Detect fake reviews using ML models trained on 40K+ reviews**")
 st.markdown("---")
 
 # Load models
@@ -201,7 +201,7 @@ metrics = load_model_metrics()
 
 if not models:
     st.error(
-        "❌ No models found! Please train models first using `train_model_5L.ipynb`"
+        "❌ No models found! Please train models first using `train_model_40k.ipynb`"
     )
     st.stop()
 
@@ -997,7 +997,7 @@ st.markdown("---")
 st.markdown(
     """
 <div style='text-align: center; color: gray;'>
-    <p>🎓 Powered by Machine Learning | Trained on 5L+ Reviews</p>
+    <p>🎓 Powered by Machine Learning | Trained on 40K+ Reviews</p>
     <p>Models: LogisticRegression, MultinomialNB, KNeighbors, LinearSVC, RandomForest</p>
 </div>
 """,

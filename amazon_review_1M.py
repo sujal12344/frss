@@ -21,13 +21,6 @@ st.set_page_config(page_title="Amazon Review Analyzer", page_icon="🔍", layout
 # Constants
 MODELS_DIR = "models_1M_pkl"
 SCRAPER_API_KEY = "2e3a0b27898501a44e5f18eff3e1775d"
-VISIBLE_MODELS = [
-    "LogisticRegression",
-    "MultinomialNB",
-    "KNeighbors",
-    "LinearSVC",
-    "RandomForest",
-]
 ps = PorterStemmer()
 
 # ==================== HELPER FUNCTIONS ====================
@@ -61,20 +54,25 @@ def clean_text(text) -> str:
 
 @st.cache_resource
 def load_available_models():
-    """Load all available trained models"""
+    """Load all available trained models from the models directory"""
     models = {}
     if not os.path.exists(MODELS_DIR):
         st.error(f"❌ Models directory '{MODELS_DIR}' not found!")
         return models
 
-    for model_name in VISIBLE_MODELS:
-        model_path = os.path.join(MODELS_DIR, f"{model_name}.pkl")
-        if os.path.exists(model_path):
-            try:
-                with open(model_path, "rb") as f:
-                    models[model_name] = pickle.load(f)
-            except Exception as e:
-                st.warning(f"⚠️ Could not load {model_name}: {e}")
+    # Dynamically discover all .pkl files in the directory
+    try:
+        for filename in os.listdir(MODELS_DIR):
+            if filename.endswith(".pkl") and filename != "models_summary.pkl":
+                model_name = filename[:-4]  # Remove .pkl extension
+                model_path = os.path.join(MODELS_DIR, filename)
+                try:
+                    with open(model_path, "rb") as f:
+                        models[model_name] = pickle.load(f)
+                except Exception as e:
+                    st.warning(f"⚠️ Could not load {model_name}: {e}")
+    except Exception as e:
+        st.error(f"❌ Error scanning models directory: {e}")
 
     return models
 
