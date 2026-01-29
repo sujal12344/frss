@@ -19,7 +19,7 @@ from nltk.stem import PorterStemmer
 st.set_page_config(page_title="Amazon Review Analyzer", page_icon="🔍", layout="wide")
 
 # Constants
-MODELS_DIR = "models_1Ms_pkl"
+MODELS_DIR = "models_1M_pkl"
 SCRAPER_API_KEY = "2e3a0b27898501a44e5f18eff3e1775d"
 ps = PorterStemmer()
 
