@@ -16,7 +16,7 @@ import streamlit as st
 from nltk.stem import PorterStemmer
 
 # Page config
-st.set_page_config(page_title="Amazon Review Analyzer", page_icon="🔍", layout="wide")
+st.set_page_config(page_title="Fake Review Detection", layout="wide")
 
 # Constants
 MODELS_DIR = "models_5L_pkl"
@@ -213,18 +213,23 @@ use_ensemble = st.sidebar.checkbox("🤖 Use Ensemble (Majority Vote)", value=Tr
 selected_model = st.sidebar.selectbox(
     "📊 Single Model (if not ensemble)", list(models.keys())
 )
-print(len(models))
 show_model_details = st.sidebar.checkbox("📈 Show Model Performance", value=False)
 
 if show_model_details and metrics:
     st.sidebar.markdown("---")
     st.sidebar.subheader("📊 Model Metrics")
-    for model_name in models.keys():
-        if model_name in metrics:
-            m = metrics[model_name]
-            st.sidebar.write(f"**{model_name}**")
-            st.sidebar.write(f"- Accuracy: {m.get('accuracy', 'N/A')}")
-            st.sidebar.write(f"- F1-Score: {m.get('f1_score', 'N/A')}")
+    
+    # Sort models by accuracy in descending order
+    sorted_models = sorted(
+        [(name, metrics[name]) for name in models.keys() if name in metrics],
+        key=lambda x: x[1].get('accuracy', 0),
+        reverse=True
+    )
+    
+    for model_name, m in sorted_models:
+        st.sidebar.write(f"**{model_name}**")
+        st.sidebar.write(f"- Accuracy: {m.get('accuracy', 'N/A')}")
+        st.sidebar.write(f"- F1-Score: {m.get('f1_score', 'N/A')}")
 
 st.sidebar.markdown("---")
 st.sidebar.info(
