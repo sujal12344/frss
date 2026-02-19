@@ -14,6 +14,7 @@ import numpy as np
 import pandas as pd
 import requests
 import streamlit as st
+import plotly.graph_objects as go
 from nltk.stem import PorterStemmer
 
 # Page config
@@ -263,6 +264,55 @@ def fetch_amazon_reviews(asin):
         return None
 
 
+def extract_product_id_from_walmart_url(url):
+    """Extract product ID from Walmart URL"""
+    # Pattern: /ip/PRODUCT-NAME/PRODUCT_ID or just PRODUCT_ID
+    patterns = [
+        r"/ip/[^/]+/(\d+)",  # /ip/Product-Name/12345678901
+        r"/[^/]*product[^/]*/(\d+)",  # variations
+    ]
+
+    for pattern in patterns:
+        match = re.search(pattern, url)
+        if match:
+            return match.group(1)
+
+    # Check if URL is already a product ID (numeric)
+    if re.match(r"^\d+$", url.strip()):
+        return url.strip()
+
+    return None
+
+
+def fetch_walmart_reviews(product_id):
+    """Fetch product reviews from Walmart using ScraperAPI"""
+    try:
+        payload = {"api_key": SCRAPER_API_KEY, "product_id": product_id}
+
+        with st.spinner(f"🔄 Fetching reviews for Product ID: {product_id}..."):
+            response = requests.get(
+                "https://api.scraperapi.com/structured/walmart/review/v1",
+                params=payload,
+                timeout=60,
+            )
+
+        if response.status_code == 200:
+            data = response.json()
+            return data
+        if response.status_code == 404:
+            st.error("❌ Product not found on Walmart!")
+            return None
+        else:
+            st.error(f"❌ API Error: Status Code {response.status_code}")
+            print(f"API Error: {response.text}")
+            return None
+
+    except Exception as e:
+        st.error(f"❌ Error fetching data: {str(e)}")
+        print(f"Exception: {str(e)}")
+        return None
+
+
 # ==================== STREAMLIT UI ====================
 
 st.title("Fake Review Detector")
@@ -312,8 +362,13 @@ st.sidebar.info(
 )
 
 # Main tabs
-tab1, tab2, tab3 = st.tabs(
-    ["✍️ Single Review Analysis", "📤 CSV Batch Analysis", "🔗 Amazon Product Analysis"]
+tab1, tab2, tab3, tab4 = st.tabs(
+    [
+        "✍️ Single Review Analysis",
+        "📤 CSV Batch Analysis",
+        "🔗 Amazon Product Analysis",
+        "🛒 Walmart Product Analysis",
+    ]
 )
 
 # ==================== TAB 1: SINGLE REVIEW ====================
@@ -636,8 +691,6 @@ with tab2:
                     # Visualization
                     st.markdown("### 📈 Visualization")
 
-                    import plotly.graph_objects as go
-
                     fig = go.Figure(
                         data=[
                             go.Bar(
@@ -700,7 +753,7 @@ with tab2:
                     st.download_button(
                         label="📥 Download Analysis Results (CSV)",
                         data=csv_output,
-                        file_name=f"batch_analysis_results.csv",
+                        file_name="batch_analysis_results.csv",
                         mime="text/csv",
                     )
 
@@ -964,7 +1017,236 @@ with tab3:
                         # Visualization
                         st.markdown("### 📈 Visualization")
 
-                        import plotly.graph_objects as go
+                        fig = go.Figure(
+                            data=[
+                                go.Bar(
+                                    x=["Genuine", "Fake"],
+                                    y=[genuine_count, fake_count],
+                                    marker_color=["#2ecc71", "#e74c3c"],
+                                    text=[
+                                        f"{genuine_count}<br>({genuine_pct:.1f}%)",
+                                        f"{fake_count}<br>({fake_pct:.1f}%)",
+                                    ],
+                                    textposition="auto",
+                                )
+                            ]
+                        )
+
+                        fig.update_layout(
+                            title="Review Distribution",
+                            xaxis_title="Review Type",
+                            yaxis_title="Count",
+                            height=400,
+                        )
+
+                        st.plotly_chart(fig, use_container_width=True)
+
+                        # Detailed results
+                        st.markdown("### 📋 Detailed Results")
+
+# ==================== TAB 4: WALMART PRODUCT ====================
+with tab4:
+    st.header("🛒 Analyze Walmart Product Reviews")
+    st.markdown("Enter a Walmart product URL or Product ID to analyze all reviews")
+
+    st.info(
+        "ℹ️ **Note:** Currently supports Walmart. For other platforms (Flipkart, Myntra, etc.), use the CSV Batch Analysis tab."
+    )
+
+    # Input
+    walmart_input = st.text_input(
+        "Walmart Product URL or Product ID:",
+        placeholder="https://www.walmart.com/ip/Product-Name/12345678901...",
+    )
+
+    col1, col2 = st.columns([1, 4])
+    with col1:
+        fetch_walmart_btn = st.button(
+            "🚀 Fetch & Analyze", type="primary", key="walmart_fetch"
+        )
+
+    if fetch_walmart_btn:
+        if not walmart_input.strip():
+            st.warning("⚠️ Please enter a URL or Product ID!")
+        else:
+            # Extract Product ID
+            product_id = extract_product_id_from_walmart_url(walmart_input)
+
+            if not product_id:
+                st.error(
+                    "❌ Invalid Walmart URL or Product ID! Please check and try again."
+                )
+            else:
+                st.info(f"📦 Detected Product ID: **{product_id}**")
+
+                # Fetch data
+                product_data = fetch_walmart_reviews(product_id)
+
+                if product_data and "reviews" in product_data:
+                    reviews_list = product_data["reviews"]
+
+                    if not reviews_list:
+                        st.warning("⚠️ No reviews found for this product!")
+                    else:
+                        st.success(f"✅ Found {len(reviews_list)} reviews!")
+
+                        # Product info
+                        st.markdown("### 📦 Product Information")
+                        col1, col2, col3 = st.columns(3)
+
+                        with col1:
+                            st.write(
+                                f"**Name:** {product_data.get('product_name', 'N/A')[:50]}..."
+                            )
+                        with col2:
+                            st.write(
+                                f"**Rating:** {product_data.get('rating', 'N/A')} ⭐"
+                            )
+                        with col3:
+                            st.write(
+                                f"**Total Reviews:** {product_data.get('review_count', 'N/A')}"
+                            )
+
+                        st.markdown("---")
+
+                        # Analyze reviews
+                        st.markdown("### 🔍 Analyzing Reviews...")
+
+                        progress_bar = st.progress(0)
+                        status_text = st.empty()
+
+                        walmart_results = []
+
+                        for idx, review in enumerate(reviews_list):
+                            review_text = review.get("text", "")
+                            review_text = review_text.strip()
+
+                            if review_text:
+                                (
+                                    pred,
+                                    conf,
+                                    individual_preds,
+                                    prediction_times,
+                                    total_time,
+                                ) = predict_review(
+                                    review_text, models, ensemble=use_ensemble
+                                )
+
+                                # Collect confidences for each model
+                                confidences = {}
+                                for model_name in individual_preds.keys():
+                                    try:
+                                        prob = models[model_name].predict_proba(
+                                            [clean_text(review_text)]
+                                        )[0]
+                                        confidences[model_name] = float(max(prob))
+                                    except:
+                                        try:
+                                            dfv = models[model_name].decision_function(
+                                                [clean_text(review_text)]
+                                            )
+                                            confidences[model_name] = float(
+                                                1 / (1 + np.exp(-dfv[0]))
+                                            )
+                                        except:
+                                            confidences[model_name] = 0.5
+
+                                # Extract badges for additional context
+                                badges = review.get("badges", [])
+                                is_verified = "Verified Purchase" in badges
+                                is_incentivized = "Incentivized Review" in badges
+
+                                walmart_results.append(
+                                    {
+                                        "Author": review.get("author", "Anonymous"),
+                                        "Rating": review.get("rating", "N/A"),
+                                        "Date": review.get("date_published", "N/A"),
+                                        "Review": (
+                                            review_text[:100] + "..."
+                                            if len(review_text) > 100
+                                            else review_text
+                                        ),
+                                        "Prediction": (
+                                            "Genuine" if pred == 1 else "Fake"
+                                        ),
+                                        "Confidence": (
+                                            f"{conf*100:.1f}%" if conf else "N/A"
+                                        ),
+                                        "Total_Time": f"{total_time:.2f} ms",
+                                        "Full_Review": review_text,
+                                        "Individual_Predictions": individual_preds,
+                                        "Prediction_Times": prediction_times,
+                                        "Confidences": confidences,
+                                        "Verified_Purchase": is_verified,
+                                        "Incentivized": is_incentivized,
+                                    }
+                                )
+
+                            progress_bar.progress((idx + 1) / len(reviews_list))
+                            status_text.text(
+                                f"Analyzed {idx + 1}/{len(reviews_list)} reviews..."
+                            )
+
+                        progress_bar.empty()
+                        status_text.empty()
+
+                        # Create DataFrame
+                        df_walmart_results = pd.DataFrame(walmart_results)
+
+                        # Store in session state to prevent reset on filter change
+                        st.session_state["df_walmart_results"] = df_walmart_results
+                        st.session_state["walmart_product_name"] = product_data.get(
+                            "product_name", "N/A"
+                        )
+                        st.session_state["walmart_product_rating"] = product_data.get(
+                            "rating", "N/A"
+                        )
+                        st.session_state["walmart_review_count"] = product_data.get(
+                            "review_count", "N/A"
+                        )
+                        st.session_state["walmart_product_id"] = product_id
+
+                        # Summary
+                        st.markdown("### 📊 Analysis Summary")
+
+                        col1, col2, col3, col4 = st.columns(4)
+
+                        total_reviews = len(df_walmart_results)
+                        genuine_count = (
+                            df_walmart_results["Prediction"] == "Genuine"
+                        ).sum()
+                        fake_count = (df_walmart_results["Prediction"] == "Fake").sum()
+                        genuine_pct = (
+                            (genuine_count / total_reviews * 100)
+                            if total_reviews > 0
+                            else 0
+                        )
+                        fake_pct = (
+                            (fake_count / total_reviews * 100)
+                            if total_reviews > 0
+                            else 0
+                        )
+
+                        with col1:
+                            st.metric("Total Reviews", total_reviews)
+                        with col2:
+                            st.metric(
+                                "✅ Genuine", f"{genuine_count} ({genuine_pct:.1f}%)"
+                            )
+                        with col3:
+                            st.metric("❌ Fake", f"{fake_count} ({fake_pct:.1f}%)")
+                        with col4:
+                            if genuine_pct >= 70:
+                                st.success("🟢 TRUSTWORTHY")
+                            elif genuine_pct >= 50:
+                                st.warning("🟡 MODERATE")
+                            else:
+                                st.error("🔴 SUSPICIOUS")
+
+                        # Visualization
+                        st.markdown("### 📈 Visualization")
+
+                        
 
                         fig = go.Figure(
                             data=[
@@ -1038,7 +1320,6 @@ if "df_results" in st.session_state and not fetch_btn:
 
     # Visualization
     st.markdown("### 📈 Visualization")
-    import plotly.graph_objects as go
 
     fig = go.Figure(
         data=[
@@ -1141,13 +1422,181 @@ if "df_results" in st.session_state and not fetch_btn:
             else:
                 st.write("No individual predictions available.")
 
+# Check if we have Walmart results in session state
+if "df_walmart_results" in st.session_state and not fetch_walmart_btn:
+    df_walmart_results = st.session_state["df_walmart_results"]
+    product_id = st.session_state.get("walmart_product_id", "unknown")
+
+    # Show product info from session
+    st.markdown("### 📦 Product Information")
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        st.write(
+            f"**Name:** {st.session_state.get('walmart_product_name', 'N/A')[:50]}..."
+        )
+    with col2:
+        st.write(
+            f"**Rating:** {st.session_state.get('walmart_product_rating', 'N/A')} ⭐"
+        )
+    with col3:
+        st.write(
+            f"**Total Reviews:** {st.session_state.get('walmart_review_count', 'N/A')}"
+        )
+
+    st.markdown("---")
+
+    # Summary
+    st.markdown("### 📊 Analysis Summary")
+    col1, col2, col3, col4 = st.columns(4)
+
+    total_reviews = len(df_walmart_results)
+    genuine_count = (df_walmart_results["Prediction"] == "Genuine").sum()
+    fake_count = (df_walmart_results["Prediction"] == "Fake").sum()
+    genuine_pct = (genuine_count / total_reviews * 100) if total_reviews > 0 else 0
+    fake_pct = (fake_count / total_reviews * 100) if total_reviews > 0 else 0
+
+    with col1:
+        st.metric("Total Reviews", total_reviews)
+    with col2:
+        st.metric("✅ Genuine", f"{genuine_count} ({genuine_pct:.1f}%)")
+    with col3:
+        st.metric("❌ Fake", f"{fake_count} ({fake_pct:.1f}%)")
+    with col4:
+        if genuine_pct >= 70:
+            st.success("🟢 TRUSTWORTHY")
+        elif genuine_pct >= 50:
+            st.warning("🟡 MODERATE")
+        else:
+            st.error("🔴 SUSPICIOUS")
+
+    # Visualization
+    st.markdown("### 📈 Visualization")
+    
+
+    fig = go.Figure(
+        data=[
+            go.Bar(
+                x=["Genuine", "Fake"],
+                y=[genuine_count, fake_count],
+                marker_color=["#2ecc71", "#e74c3c"],
+                text=[
+                    f"{genuine_count}<br>({genuine_pct:.1f}%)",
+                    f"{fake_count}<br>({fake_pct:.1f}%)",
+                ],
+                textposition="auto",
+            )
+        ]
+    )
+
+    fig.update_layout(
+        title="Review Distribution",
+        xaxis_title="Review Type",
+        yaxis_title="Count",
+        height=400,
+    )
+
+    st.plotly_chart(fig, use_container_width=True)
+
+    # Detailed results
+    st.markdown("### 📋 Detailed Results")
+
+    # Filter options
+    filter_col1, filter_col2 = st.columns(2)
+    with filter_col1:
+        walmart_filter = st.selectbox(
+            "Filter by:",
+            ["All", "Genuine Only", "Fake Only"],
+            key="walmart_filter_selector",
+        )
+
+    # Apply filter
+    if walmart_filter == "Genuine Only":
+        df_walmart_display = df_walmart_results[
+            df_walmart_results["Prediction"] == "Genuine"
+        ].copy()
+    elif walmart_filter == "Fake Only":
+        df_walmart_display = df_walmart_results[
+            df_walmart_results["Prediction"] == "Fake"
+        ].copy()
+    else:
+        df_walmart_display = df_walmart_results.copy()
+
+    # Display table
+    st.dataframe(
+        df_walmart_display[
+            [
+                "Author",
+                "Rating",
+                "Date",
+                "Review",
+                "Prediction",
+                "Confidence",
+                "Verified_Purchase",
+                "Incentivized",
+            ]
+        ],
+        use_container_width=True,
+        hide_index=True,
+    )
+
+    # Download button
+    csv = df_walmart_results.to_csv(index=False).encode("utf-8")
+    st.download_button(
+        label="📥 Download Full Analysis (CSV)",
+        data=csv,
+        file_name=f"walmart_reviews_analysis_{product_id}.csv",
+        mime="text/csv",
+    )
+
+    # Show individual reviews with model predictions
+    st.markdown("### 🔎 View Individual Reviews")
+
+    for idx, row in df_walmart_display.iterrows():
+        purchase_status = (
+            "✅ Verified Purchase" if row.get("Verified_Purchase") else "❌ Unverified"
+        )
+        incentivized_status = "⭐ Incentivized" if row.get("Incentivized") else ""
+
+        with st.expander(
+            f"{'✅' if row['Prediction'] == 'Genuine' else '❌'} {row['Author']} - {row['Rating']} ⭐ ({row['Date']}) {purchase_status}"
+        ):
+            col1, col2, col3 = st.columns(3)
+            with col1:
+                st.write(f"**Overall Prediction:** {row['Prediction']}")
+            with col2:
+                st.write(f"**Ensemble Confidence:** {row['Confidence']}")
+            with col3:
+                st.write(f"**Prediction Time:** {row.get('Total_Time', 'N/A')}")
+            st.markdown("---")
+
+            st.write(f"**Review:**")
+            st.write(row["Full_Review"])
+            st.markdown("---")
+
+            # Detailed model metrics table
+            st.write("**📊 Detailed Model Predictions & Metrics:**")
+
+            if "Individual_Predictions" in row and row["Individual_Predictions"]:
+                individual_preds = row["Individual_Predictions"]
+                prediction_times = row.get("Prediction_Times", {})
+                confidences = row.get("Confidences", {})
+                display_metrics_table(
+                    individual_preds,
+                    confidences,
+                    metrics,
+                    prediction_times,
+                    list(individual_preds.keys()),
+                )
+            else:
+                st.write("No individual predictions available.")
+
 # Footer
 st.markdown("---")
 st.markdown(
     """
 <div style='text-align: center; color: gray;'>
     <p>🎓 Powered by Machine Learning | Trained on 1M+ Reviews</p>
-    <p>Models: LogisticRegression, MultinomialNB, KNeighbors, LinearSVC, RandomForest, etc</p>
+    <p>Supports: Amazon, Walmart, CSV Batch Analysis & Single Review Detection</p>
 </div>
 """,
     unsafe_allow_html=True,
