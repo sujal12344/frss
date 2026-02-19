@@ -8,6 +8,7 @@
 import os
 import pickle
 import re
+import time
 
 import numpy as np
 import pandas as pd
@@ -93,18 +94,21 @@ def load_model_metrics():
 def predict_review(text, models, ensemble=True):
     """
     Predict if a review is Fake or Genuine
-    Returns: prediction (0=Fake, 1=Genuine), confidence, individual predictions
+    Returns: prediction (0=Fake, 1=Genuine), confidence, individual predictions, prediction times
     """
+    start_time = time.time()
     cleaned = clean_text(text)
 
     if not cleaned:
-        return None, None, {}
+        return None, None, {}, {}, 0
 
     predictions = {}
     confidences = {}
+    prediction_times = {}
 
     for model_name, model in models.items():
         try:
+            model_start = time.time()
             # Get prediction
             pred = int(model.predict([cleaned])[0])
             predictions[model_name] = pred
@@ -121,21 +125,91 @@ def predict_review(text, models, ensemble=True):
                     conf = 0.5
 
             confidences[model_name] = conf
+            prediction_times[model_name] = round(
+                (time.time() - model_start) * 1000, 2
+            )  # ms
         except Exception as e:
             st.warning(f"Error with {model_name}: {e}")
+
+    total_time = round((time.time() - start_time) * 1000, 2)  # ms
 
     if ensemble and len(predictions) > 0:
         # Majority voting
         vote_count = sum(predictions.values())
         final_pred = 1 if vote_count >= len(predictions) / 2 else 0
         avg_conf = sum(confidences.values()) / len(confidences)
-        return final_pred, avg_conf, predictions
+        return final_pred, avg_conf, predictions, prediction_times, total_time
     elif len(predictions) > 0:
         # Use first model
         first_model = list(predictions.keys())[0]
-        return predictions[first_model], confidences[first_model], predictions
+        return (
+            predictions[first_model],
+            confidences[first_model],
+            predictions,
+            prediction_times,
+            total_time,
+        )
     else:
-        return None, None, {}
+        return None, None, {}, {}, 0
+
+
+def display_metrics_table(
+    individual_preds, confidences, metrics, prediction_times, model_names
+):
+    """Display detailed metrics for each model in table format"""
+    table_data = []
+
+    for model_name in model_names:
+        if model_name in individual_preds:
+            pred = individual_preds[model_name]
+            confidence = confidences.get(model_name, 0.0)
+            pred_time = prediction_times.get(model_name, 0.0)
+
+            # Get metrics from the metrics dictionary
+            model_metrics = metrics.get(model_name, {})
+            accuracy = model_metrics.get("accuracy", "N/A")
+            precision = model_metrics.get("precision", "N/A")
+            recall = model_metrics.get("recall", "N/A")
+            f1_score = model_metrics.get("f1_score", "N/A")
+            sensitivity = model_metrics.get(
+                "sensitivity", model_metrics.get("recall", "N/A")
+            )
+            # specificity = model_metrics.get('specificity', 'N/A')
+
+            # Format numeric values
+            accuracy_str = (
+                f"{accuracy:.4f}" if isinstance(accuracy, float) else accuracy
+            )
+            precision_str = (
+                f"{precision:.4f}" if isinstance(precision, float) else precision
+            )
+            recall_str = f"{recall:.4f}" if isinstance(recall, float) else recall
+            f1_str = f"{f1_score:.4f}" if isinstance(f1_score, float) else f1_score
+            sensitivity_str = (
+                f"{sensitivity:.4f}" if isinstance(sensitivity, float) else sensitivity
+            )
+            # specificity_str = f"{specificity:.4f}" if isinstance(specificity, float) else specificity
+
+            table_data.append(
+                {
+                    "Algorithm": model_name,
+                    "Prediction": "✅ Genuine" if pred == 1 else "❌ Fake",
+                    "Confidence": f"{confidence*100:.2f}%",
+                    "Accuracy": accuracy_str,
+                    "Precision": precision_str,
+                    "Recall": recall_str,
+                    "F1-Score": f1_str,
+                    "Sensitivity": sensitivity_str,
+                    # "Specificity": specificity_str,
+                    "Time (ms)": f"{pred_time:.2f}",
+                }
+            )
+
+    if table_data:
+        df_metrics = pd.DataFrame(table_data)
+        st.dataframe(df_metrics, use_container_width=True, hide_index=True)
+    else:
+        st.info("No metrics available")
 
 
 def extract_asin_from_url(url):
@@ -218,17 +292,18 @@ show_model_details = st.sidebar.checkbox("📈 Show Model Performance", value=Fa
 if show_model_details and metrics:
     st.sidebar.markdown("---")
     st.sidebar.subheader("📊 Model Metrics")
-    
+
     # Sort models by accuracy in descending order
     sorted_models = sorted(
         [(name, metrics[name]) for name in models.keys() if name in metrics],
-        key=lambda x: x[1].get('accuracy', 0),
-        reverse=True
+        key=lambda x: x[1].get("accuracy", 0),
+        reverse=True,
     )
-    
+
     for model_name, m in sorted_models:
         st.sidebar.write(f"**{model_name}**")
         st.sidebar.write(f"- Accuracy: {m.get('accuracy', 'N/A')}")
+        st.sidebar.write(f"- Precision: {m.get('precision', 'N/A')}")
         st.sidebar.write(f"- F1-Score: {m.get('f1_score', 'N/A')}")
 
 st.sidebar.markdown("---")
@@ -259,15 +334,35 @@ with tab1:
         else:
             with st.spinner("🔄 Analyzing review..."):
                 if use_ensemble:
-                    pred, conf, individual_preds = predict_review(
-                        review_text, models, ensemble=True
+                    pred, conf, individual_preds, prediction_times, total_time = (
+                        predict_review(review_text, models, ensemble=True)
                     )
+                    confidences = {}
+                    for model_name in individual_preds.keys():
+                        try:
+                            prob = models[model_name].predict_proba(
+                                [clean_text(review_text)]
+                            )[0]
+                            confidences[model_name] = float(max(prob))
+                        except:
+                            try:
+                                dfv = models[model_name].decision_function(
+                                    [clean_text(review_text)]
+                                )
+                                confidences[model_name] = float(
+                                    1 / (1 + np.exp(-dfv[0]))
+                                )
+                            except:
+                                confidences[model_name] = 0.5
                 else:
-                    pred, conf, individual_preds = predict_review(
-                        review_text,
-                        {selected_model: models[selected_model]},
-                        ensemble=False,
+                    pred, conf, individual_preds, prediction_times, total_time = (
+                        predict_review(
+                            review_text,
+                            {selected_model: models[selected_model]},
+                            ensemble=False,
+                        )
                     )
+                    confidences = {selected_model: conf}
 
             if pred is not None:
                 # Display result
@@ -288,27 +383,19 @@ with tab1:
                     st.metric("Confidence", confidence_display)
 
                 with col3:
-                    genuine_votes = sum(1 for p in individual_preds.values() if p == 1)
-                    total_votes = len(individual_preds)
-                    st.metric(
-                        "Model Agreement", f"{genuine_votes}/{total_votes} Genuine"
-                    )
+                    st.metric("Total Prediction Time", f"{total_time:.2f} ms")
 
-                # Individual model predictions
+                # Individual model predictions metrics table
                 if use_ensemble and len(individual_preds) > 1:
-                    st.markdown("### 🤖 Individual Model Predictions")
-
-                    pred_df = pd.DataFrame(
-                        [
-                            {
-                                "Model": name,
-                                "Prediction": "✅ Genuine" if p == 1 else "❌ Fake",
-                            }
-                            for name, p in individual_preds.items()
-                        ]
+                    st.markdown("### 🤖 Detailed Model Predictions")
+                    display_metrics_table(
+                        individual_preds,
+                        confidences,
+                        metrics,
+                        prediction_times,
+                        list(individual_preds.keys()),
                     )
 
-                    st.dataframe(pred_df, use_container_width=True, hide_index=True)
             else:
                 st.error("❌ Could not analyze the review!")
 
@@ -437,9 +524,34 @@ with tab2:
                             and not pd.isna(review_text)
                             and review_text.strip()
                         ):
-                            pred, conf, individual_preds = predict_review(
+                            (
+                                pred,
+                                conf,
+                                individual_preds,
+                                prediction_times,
+                                total_time,
+                            ) = predict_review(
                                 review_text, models, ensemble=use_ensemble
                             )
+
+                            # Collect confidences for each model
+                            confidences = {}
+                            for model_name in individual_preds.keys():
+                                try:
+                                    prob = models[model_name].predict_proba(
+                                        [clean_text(review_text)]
+                                    )[0]
+                                    confidences[model_name] = float(max(prob))
+                                except:
+                                    try:
+                                        dfv = models[model_name].decision_function(
+                                            [clean_text(review_text)]
+                                        )
+                                        confidences[model_name] = float(
+                                            1 / (1 + np.exp(-dfv[0]))
+                                        )
+                                    except:
+                                        confidences[model_name] = 0.5
 
                             batch_results.append(
                                 {
@@ -451,8 +563,11 @@ with tab2:
                                     ),
                                     "Prediction": "Genuine" if pred == 1 else "Fake",
                                     "Confidence": f"{conf*100:.1f}%" if conf else "N/A",
+                                    "Total_Time": f"{total_time:.2f} ms",
                                     "Full_Review": review_text,
                                     "Individual_Predictions": individual_preds,
+                                    "Prediction_Times": prediction_times,
+                                    "Confidences": confidences,
                                 }
                             )
                         else:
@@ -597,39 +712,42 @@ with tab2:
                             with st.expander(
                                 f"Row {row['Row_Number']}: {'✅' if row['Prediction'] == 'Genuine' else '❌'} {row['Prediction']} ({row['Confidence']})"
                             ):
-                                st.write(f"**Overall Prediction:** {row['Prediction']}")
-                                st.write(
-                                    f"**Ensemble Confidence:** {row['Confidence']}"
-                                )
+                                col1, col2, col3 = st.columns(3)
+                                with col1:
+                                    st.write(
+                                        f"**Overall Prediction:** {row['Prediction']}"
+                                    )
+                                with col2:
+                                    st.write(
+                                        f"**Ensemble Confidence:** {row['Confidence']}"
+                                    )
+                                with col3:
+                                    st.write(
+                                        f"**Prediction Time:** {row.get('Total_Time', 'N/A')}"
+                                    )
                                 st.markdown("---")
 
                                 st.write(f"**Review:**")
                                 st.write(row["Full_Review"])
                                 st.markdown("---")
 
-                                # Individual model predictions
-                                st.write("**🤖 Individual Model Predictions:**")
+                                # Detailed model metrics table
+                                st.write("**📊 Detailed Model Predictions & Metrics:**")
 
                                 if (
                                     "Individual_Predictions" in row
                                     and row["Individual_Predictions"]
                                 ):
                                     individual_preds = row["Individual_Predictions"]
-
-                                    num_models = len(individual_preds)
-                                    cols = st.columns(min(num_models, 3))
-
-                                    for i, (model_name, pred) in enumerate(
-                                        individual_preds.items()
-                                    ):
-                                        col_idx = i % 3
-                                        with cols[col_idx]:
-                                            if pred == 1:
-                                                st.success(
-                                                    f"**{model_name}**\n✅ Genuine"
-                                                )
-                                            else:
-                                                st.error(f"**{model_name}**\n❌ Fake")
+                                    prediction_times = row.get("Prediction_Times", {})
+                                    confidences = row.get("Confidences", {})
+                                    display_metrics_table(
+                                        individual_preds,
+                                        confidences,
+                                        metrics,
+                                        prediction_times,
+                                        list(individual_preds.keys()),
+                                    )
                                 else:
                                     st.write("No individual predictions available.")
 
@@ -731,9 +849,34 @@ with tab3:
                             review_text = review_text.strip()
 
                             if review_text:
-                                pred, conf, individual_preds = predict_review(
+                                (
+                                    pred,
+                                    conf,
+                                    individual_preds,
+                                    prediction_times,
+                                    total_time,
+                                ) = predict_review(
                                     review_text, models, ensemble=use_ensemble
                                 )
+
+                                # Collect confidences for each model
+                                confidences = {}
+                                for model_name in individual_preds.keys():
+                                    try:
+                                        prob = models[model_name].predict_proba(
+                                            [clean_text(review_text)]
+                                        )[0]
+                                        confidences[model_name] = float(max(prob))
+                                    except:
+                                        try:
+                                            dfv = models[model_name].decision_function(
+                                                [clean_text(review_text)]
+                                            )
+                                            confidences[model_name] = float(
+                                                1 / (1 + np.exp(-dfv[0]))
+                                            )
+                                        except:
+                                            confidences[model_name] = 0.5
 
                                 results.append(
                                     {
@@ -751,8 +894,11 @@ with tab3:
                                         "Confidence": (
                                             f"{conf*100:.1f}%" if conf else "N/A"
                                         ),
+                                        "Total_Time": f"{total_time:.2f} ms",
                                         "Full_Review": review_text,
                                         "Individual_Predictions": individual_preds,
+                                        "Prediction_Times": prediction_times,
+                                        "Confidences": confidences,
                                     }
                                 )
 
@@ -978,23 +1124,20 @@ if "df_results" in st.session_state and not fetch_btn:
             st.write(row["Full_Review"])
             st.markdown("---")
 
-            # Individual model predictions
-            st.write("**🤖 Individual Model Predictions:**")
+            # Detailed model metrics table
+            st.write("**📊 Detailed Model Predictions & Metrics:**")
 
             if "Individual_Predictions" in row and row["Individual_Predictions"]:
                 individual_preds = row["Individual_Predictions"]
-
-                # Create columns for models
-                num_models = len(individual_preds)
-                cols = st.columns(min(num_models, 3))
-
-                for i, (model_name, pred) in enumerate(individual_preds.items()):
-                    col_idx = i % 3
-                    with cols[col_idx]:
-                        if pred == 1:
-                            st.success(f"**{model_name}**\n✅ Genuine")
-                        else:
-                            st.error(f"**{model_name}**\n❌ Fake")
+                prediction_times = row.get("Prediction_Times", {})
+                confidences = row.get("Confidences", {})
+                display_metrics_table(
+                    individual_preds,
+                    confidences,
+                    metrics,
+                    prediction_times,
+                    list(individual_preds.keys()),
+                )
             else:
                 st.write("No individual predictions available.")
 
@@ -1004,7 +1147,7 @@ st.markdown(
     """
 <div style='text-align: center; color: gray;'>
     <p>🎓 Powered by Machine Learning | Trained on 1M+ Reviews</p>
-    <p>Models: LogisticRegression, MultinomialNB, KNeighbors, LinearSVC, RandomForest</p>
+    <p>Models: LogisticRegression, MultinomialNB, KNeighbors, LinearSVC, RandomForest, etc</p>
 </div>
 """,
     unsafe_allow_html=True,
