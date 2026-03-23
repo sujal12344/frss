@@ -5,9 +5,9 @@ import time
 
 import numpy as np
 import pandas as pd
+import plotly.graph_objects as go
 import requests
 import streamlit as st
-import plotly.graph_objects as go
 from nltk.stem import PorterStemmer
 
 # Page config
@@ -205,6 +205,151 @@ def display_metrics_table(
         st.dataframe(df_metrics, use_container_width=True, hide_index=True)
     else:
         st.info("No metrics available")
+
+
+def display_review_metrics_charts(
+    individual_preds, confidences, metrics, prediction_times, model_names
+):
+    """Display graphical representations for review metrics"""
+    # Extract confidence and metrics data
+    confidence_data = []
+    accuracy_data = []
+    precision_data = []
+    recall_data = []
+    f1_data = []
+
+    for model_name in model_names:
+        if model_name in confidences:
+            confidence_data.append(
+                {
+                    "model": model_name,
+                    "confidence": confidences.get(model_name, 0) * 100,
+                }
+            )
+
+        model_metrics = metrics.get(model_name, {})
+        if any(
+            [
+                model_metrics.get("accuracy"),
+                model_metrics.get("precision"),
+                model_metrics.get("recall"),
+                model_metrics.get("f1_score"),
+            ]
+        ):
+            accuracy = model_metrics.get("accuracy", 0)
+            precision = model_metrics.get("precision", 0)
+            recall = model_metrics.get("recall", 0)
+            f1_score = model_metrics.get("f1_score", 0)
+
+            accuracy_data.append(accuracy if isinstance(accuracy, float) else 0)
+            precision_data.append(precision if isinstance(precision, float) else 0)
+            recall_data.append(recall if isinstance(recall, float) else 0)
+            f1_data.append(f1_score if isinstance(f1_score, float) else 0)
+
+    col1, col2 = st.columns(2)
+
+    # Chart 1: Model Confidence Levels
+    if confidence_data:
+        with col1:
+            st.markdown("**🎯 Model Confidence Levels**")
+            conf_df = pd.DataFrame(confidence_data)
+            fig_conf = go.Figure(
+                data=[
+                    go.Bar(
+                        x=conf_df["model"],
+                        y=conf_df["confidence"],
+                        marker_color="#3498db",
+                        text=conf_df["confidence"].apply(lambda x: f"{x:.1f}%"),
+                        textposition="auto",
+                    )
+                ]
+            )
+            fig_conf.update_layout(
+                title="",
+                xaxis_title="Algorithm",
+                yaxis_title="Confidence (%)",
+                height=350,
+                showlegend=False,
+                hovermode="x unified",
+            )
+            fig_conf.update_yaxes(range=[0, 100])
+            st.plotly_chart(fig_conf, use_container_width=True)
+
+    # Chart 2: Model Performance Metrics
+    if accuracy_data and len(model_names) > 0:
+        with col2:
+            st.markdown("**📊 Model Performance Metrics**")
+            fig_metrics = go.Figure(
+                data=[
+                    go.Bar(
+                        name="Accuracy",
+                        x=model_names,
+                        y=accuracy_data,
+                        marker_color="#2ecc71",
+                    ),
+                    go.Bar(
+                        name="Precision",
+                        x=model_names,
+                        y=precision_data,
+                        marker_color="#f39c12",
+                    ),
+                    go.Bar(
+                        name="Recall",
+                        x=model_names,
+                        y=recall_data,
+                        marker_color="#9b59b6",
+                    ),
+                    go.Bar(
+                        name="F1-Score",
+                        x=model_names,
+                        y=f1_data,
+                        marker_color="#e74c3c",
+                    ),
+                ]
+            )
+            fig_metrics.update_layout(
+                title="",
+                xaxis_title="Algorithm",
+                yaxis_title="Score",
+                barmode="group",
+                height=350,
+                hovermode="x unified",
+            )
+            fig_metrics.update_yaxes(range=[0, 1])
+            st.plotly_chart(fig_metrics, use_container_width=True)
+
+    # Chart 3: Prediction Time Comparison
+    if prediction_times:
+        st.markdown("**⏱️ Prediction Time Comparison**")
+        time_data = []
+        for model_name in model_names:
+            if model_name in prediction_times:
+                time_data.append(
+                    {"model": model_name, "time": prediction_times[model_name]}
+                )
+
+        if time_data:
+            time_df = pd.DataFrame(time_data)
+            fig_time = go.Figure(
+                data=[
+                    go.Bar(
+                        x=time_df["model"],
+                        y=time_df["time"],
+                        marker_color="#e67e22",
+                        text=time_df["time"].apply(lambda x: f"{x:.2f}ms"),
+                        textposition="auto",
+                    )
+                ]
+            )
+            fig_time.update_layout(
+                title="",
+                xaxis_title="Algorithm",
+                yaxis_title="Time (ms)",
+                height=300,
+                showlegend=False,
+                hovermode="x unified",
+            )
+            st.plotly_chart(fig_time, use_container_width=True)
 
 
 def extract_asin_from_url(url):
@@ -439,6 +584,16 @@ with tab1:
                 if use_ensemble and len(individual_preds) > 1:
                     st.markdown("### 🤖 Detailed Model Predictions")
                     display_metrics_table(
+                        individual_preds,
+                        confidences,
+                        metrics,
+                        prediction_times,
+                        list(individual_preds.keys()),
+                    )
+
+                    # Display graphical representations
+                    st.markdown("### 📈 Visual Analytics")
+                    display_review_metrics_charts(
                         individual_preds,
                         confidences,
                         metrics,
@@ -790,6 +945,16 @@ with tab2:
                                     prediction_times = row.get("Prediction_Times", {})
                                     confidences = row.get("Confidences", {})
                                     display_metrics_table(
+                                        individual_preds,
+                                        confidences,
+                                        metrics,
+                                        prediction_times,
+                                        list(individual_preds.keys()),
+                                    )
+
+                                    # Display graphical representations
+                                    st.markdown("**📈 Visual Analytics:**")
+                                    display_review_metrics_charts(
                                         individual_preds,
                                         confidences,
                                         metrics,
@@ -1241,8 +1406,6 @@ with tab4:
                         # Visualization
                         st.markdown("### 📈 Visualization")
 
-                        
-
                         fig = go.Figure(
                             data=[
                                 go.Bar(
@@ -1414,6 +1577,16 @@ if "df_results" in st.session_state and not fetch_btn:
                     prediction_times,
                     list(individual_preds.keys()),
                 )
+
+                # Display graphical representations
+                st.markdown("**📈 Visual Analytics:**")
+                display_review_metrics_charts(
+                    individual_preds,
+                    confidences,
+                    metrics,
+                    prediction_times,
+                    list(individual_preds.keys()),
+                )
             else:
                 st.write("No individual predictions available.")
 
@@ -1466,7 +1639,6 @@ if "df_walmart_results" in st.session_state and not fetch_walmart_btn:
 
     # Visualization
     st.markdown("### 📈 Visualization")
-    
 
     fig = go.Figure(
         data=[
@@ -1576,6 +1748,16 @@ if "df_walmart_results" in st.session_state and not fetch_walmart_btn:
                 prediction_times = row.get("Prediction_Times", {})
                 confidences = row.get("Confidences", {})
                 display_metrics_table(
+                    individual_preds,
+                    confidences,
+                    metrics,
+                    prediction_times,
+                    list(individual_preds.keys()),
+                )
+
+                # Display graphical representations
+                st.markdown("**📈 Visual Analytics:**")
+                display_review_metrics_charts(
                     individual_preds,
                     confidences,
                     metrics,
