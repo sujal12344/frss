@@ -1,10 +1,3 @@
-"""
-🎯 Fake Review Detector
-- Single review detection
-- Batch analysis from Amazon product URL
-- Uses trained models from models_1M_pkl/
-"""
-
 import os
 import pickle
 import re
@@ -21,7 +14,7 @@ from nltk.stem import PorterStemmer
 st.set_page_config(page_title="Fake Review Detection", layout="wide")
 
 # Constants
-MODELS_DIR = "models_1M_pkl"
+MODELS_DIR = "models"
 SCRAPER_API_KEY = "2e3a0b27898501a44e5f18eff3e1775d"
 ps = PorterStemmer()
 
@@ -130,7 +123,8 @@ def predict_review(text, models, ensemble=True):
                 (time.time() - model_start) * 1000, 2
             )  # ms
         except Exception as e:
-            st.warning(f"Error with {model_name}: {e}")
+            # st.warning(f"Error with {model_name}: {e}")
+            print(f"Error with {model_name}: {e}")
 
     total_time = round((time.time() - start_time) * 1000, 2)  # ms
 
@@ -218,6 +212,7 @@ def extract_asin_from_url(url):
     # Pattern: /dp/ASIN or /product/ASIN or ?asin=ASIN
     patterns = [
         r"/dp/([A-Z0-9]{10})",
+        r"/d/([A-Z0-9]{10})",
         r"/product/([A-Z0-9]{10})",
         r"[?&]asin=([A-Z0-9]{10})",
         r"/gp/product/([A-Z0-9]{10})",
