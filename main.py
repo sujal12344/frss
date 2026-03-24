@@ -208,7 +208,7 @@ def display_metrics_table(
 
 
 def display_review_metrics_charts(
-    individual_preds, confidences, metrics, prediction_times, model_names
+    individual_preds, confidences, metrics, prediction_times, model_names, key_prefix=""
 ):
     """Display graphical representations for review metrics"""
     # Extract confidence and metrics data
@@ -273,7 +273,9 @@ def display_review_metrics_charts(
                 hovermode="x unified",
             )
             fig_conf.update_yaxes(range=[0, 100])
-            st.plotly_chart(fig_conf, use_container_width=True)
+            st.plotly_chart(
+                fig_conf, use_container_width=True, key=f"{key_prefix}_conf"
+            )
 
     # Chart 2: Model Performance Metrics
     if accuracy_data and len(model_names) > 0:
@@ -316,7 +318,9 @@ def display_review_metrics_charts(
                 hovermode="x unified",
             )
             fig_metrics.update_yaxes(range=[0, 1])
-            st.plotly_chart(fig_metrics, use_container_width=True)
+            st.plotly_chart(
+                fig_metrics, use_container_width=True, key=f"{key_prefix}_metrics"
+            )
 
     # Chart 3: Prediction Time Comparison
     if prediction_times:
@@ -349,7 +353,9 @@ def display_review_metrics_charts(
                 showlegend=False,
                 hovermode="x unified",
             )
-            st.plotly_chart(fig_time, use_container_width=True)
+            st.plotly_chart(
+                fig_time, use_container_width=True, key=f"{key_prefix}_time"
+            )
 
 
 def extract_asin_from_url(url):
@@ -599,6 +605,7 @@ with tab1:
                         metrics,
                         prediction_times,
                         list(individual_preds.keys()),
+                        key_prefix="single_review",
                     )
 
             else:
@@ -960,6 +967,7 @@ with tab2:
                                         metrics,
                                         prediction_times,
                                         list(individual_preds.keys()),
+                                        key_prefix=f"csv_review_{idx}",
                                     )
                                 else:
                                     st.write("No individual predictions available.")
@@ -1586,6 +1594,7 @@ if "df_results" in st.session_state and not fetch_btn:
                     metrics,
                     prediction_times,
                     list(individual_preds.keys()),
+                    key_prefix=f"amazon_review_{idx}",
                 )
             else:
                 st.write("No individual predictions available.")
@@ -1763,6 +1772,7 @@ if "df_walmart_results" in st.session_state and not fetch_walmart_btn:
                     metrics,
                     prediction_times,
                     list(individual_preds.keys()),
+                    key_prefix=f"walmart_review_{idx}",
                 )
             else:
                 st.write("No individual predictions available.")
