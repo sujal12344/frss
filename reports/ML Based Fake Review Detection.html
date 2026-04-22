@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ML Based Fake Review Detection - Comprehensive Test Report</title>
+  <style>
+    :root {
+      --bg: #f4f6fa;
+      --card: #ffffff;
+      --primary: #4d74de;
+      --primary-dark: #3f5fc4;
+      --accent: #2f9e62;
+      --warning: #cf8a10;
+      --danger: #c63b37;
+      --text: #1f2937;
+      --muted: #6b7280;
+      --border: #d9e0eb;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    .wrap {
+      max-width: 1180px;
+      margin: 0 auto;
+      background: var(--card);
+      min-height: 100vh;
+      box-shadow: 0 14px 40px rgba(24, 39, 75, 0.08);
+    }
+
+    .hero {
+      background: linear-gradient(100deg, #5d7ce6 0%, #5a63d6 50%, #7346b6 100%);
+      color: #fff;
+      padding: 34px 28px;
+      text-align: center;
+    }
+
+    .hero h1 {
+      margin: 0;
+      font-size: 46px;
+      letter-spacing: 1px;
+      font-weight: 800;
+    }
+
+    .hero p {
+      margin: 8px 0 0;
+      opacity: 0.94;
+      font-size: 18px;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 18px;
+    }
+
+    .grid-4 {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .section {
+      padding: 22px 26px 8px;
+    }
+
+    .meta-card {
+      background: #f8faff;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px 15px;
+      min-height: 100px;
+    }
+
+    .label {
+      color: var(--primary-dark);
+      font-size: 13px;
+      font-weight: 700;
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .value {
+      font-size: 24px;
+      font-weight: 700;
+      line-height: 1.28;
+    }
+
+    .line {
+      margin: 12px 0;
+      border: none;
+      border-top: 1px solid var(--border);
+    }
+
+    .kpi {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      text-align: center;
+      padding: 14px 8px;
+      background: #fff;
+    }
+
+    .kpi .num {
+      font-size: 36px;
+      color: var(--primary);
+      font-weight: 800;
+      margin-bottom: 6px;
+    }
+
+    .kpi .txt {
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    h2 {
+      margin: 0 0 12px;
+      color: var(--primary-dark);
+      font-size: 32px;
+      border-bottom: 2px solid #bcd0ff;
+      padding-bottom: 6px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 18px;
+      font-size: 14px;
+    }
+
+    th {
+      background: #5d7ce6;
+      color: #fff;
+      text-align: left;
+      padding: 10px;
+      font-size: 14px;
+      border: 1px solid #6682e8;
+    }
+
+    td {
+      padding: 9px 10px;
+      border: 1px solid var(--border);
+      vertical-align: top;
+    }
+
+    tr:nth-child(even) td { background: #fbfcff; }
+
+    .status-pass {
+      color: var(--accent);
+      font-weight: 700;
+    }
+
+    .status-warn {
+      color: var(--warning);
+      font-weight: 700;
+    }
+
+    .status-info {
+      color: var(--primary-dark);
+      font-weight: 700;
+    }
+
+    .pill {
+      display: inline-block;
+      padding: 4px 9px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+    }
+
+    .pill-pass {
+      background: #e6f6ec;
+      color: #1f7b4a;
+      border: 1px solid #b9e5cb;
+    }
+
+    .pill-warn {
+      background: #fff6e8;
+      color: #a66c0d;
+      border: 1px solid #f2d4a2;
+    }
+
+    .foot {
+      text-align: center;
+      color: var(--muted);
+      padding: 18px 20px 26px;
+      border-top: 1px solid var(--border);
+      margin-top: 12px;
+      font-size: 13px;
+    }
+
+    @media (max-width: 900px) {
+      .grid-3,
+      .grid-4 { grid-template-columns: 1fr; }
+
+      .hero h1 { font-size: 34px; }
+      h2 { font-size: 26px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="hero">
+      <h1>ML Based Fake Review Detection</h1>
+      <p>Comprehensive Software Testing Report</p>
+    </div>
+
+    <div class="section">
+      <div class="grid-3">
+        <div class="meta-card">
+          <div class="label">Project Name</div>
+          <div class="value">ML Based Fake Review Detection</div>
+        </div>
+        <div class="meta-card">
+          <div class="label">Test Type</div>
+          <div class="value">Unit + API + Feature Validation</div>
+        </div>
+        <div class="meta-card">
+          <div class="label">Executed On</div>
+          <div class="value">April 23, 2026</div>
+        </div>
+      </div>
+
+      <hr class="line" />
+
+      <div class="grid-4">
+        <div class="meta-card">
+          <div class="label">Overall Status</div>
+          <div class="value status-pass">APPROVED</div>
+        </div>
+        <div class="meta-card">
+          <div class="label">Automated Unit Tests</div>
+          <div class="value">28 / 28 Pass</div>
+        </div>
+        <div class="meta-card">
+          <div class="label">Third-party API Checks</div>
+          <div class="value">2 / 2 Pass</div>
+        </div>
+        <div class="meta-card">
+          <div class="label">Requirement Gap</div>
+          <div class="value status-warn">Auth Module Missing</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>Test Execution Summary</h2>
+      <div class="grid-4">
+        <div class="kpi">
+          <div class="num">30</div>
+          <div class="txt">Total Executed Checks</div>
+        </div>
+        <div class="kpi">
+          <div class="num">30</div>
+          <div class="txt">Passed Checks</div>
+        </div>
+        <div class="kpi">
+          <div class="num">0</div>
+          <div class="txt">Failed Checks</div>
+        </div>
+        <div class="kpi">
+          <div class="num">100%</div>
+          <div class="txt">Success Rate</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>Module-wise Test Coverage</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Module</th>
+            <th>Test Cases</th>
+            <th>Passed</th>
+            <th>Coverage</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Utility Functions (text cleaning, URL parsing, formatting)</td>
+            <td>7</td>
+            <td>7</td>
+            <td>100%</td>
+            <td><span class="pill pill-pass">COMPLETE</span></td>
+          </tr>
+          <tr>
+            <td>Prediction Engine (confidence + ensemble voting)</td>
+            <td>9</td>
+            <td>9</td>
+            <td>100%</td>
+            <td><span class="pill pill-pass">COMPLETE</span></td>
+          </tr>
+          <tr>
+            <td>Model Handler (model and metrics loading)</td>
+            <td>4</td>
+            <td>4</td>
+            <td>100%</td>
+            <td><span class="pill pill-pass">COMPLETE</span></td>
+          </tr>
+          <tr>
+            <td>Scraper Integration Handlers (Amazon/Walmart)</td>
+            <td>5</td>
+            <td>5</td>
+            <td>100%</td>
+            <td><span class="pill pill-pass">COMPLETE</span></td>
+          </tr>
+          <tr>
+            <td>Feature Logic (CSV, Amazon flow, Walmart flow)</td>
+            <td>3</td>
+            <td>3</td>
+            <td>100%</td>
+            <td><span class="pill pill-pass">COMPLETE</span></td>
+          </tr>
+          <tr>
+            <td>Third-party API Live Smoke Checks</td>
+            <td>2</td>
+            <td>2</td>
+            <td>100%</td>
+            <td><span class="pill pill-pass">PASS</span></td>
+          </tr>
+          <tr>
+            <td><b>TOTAL</b></td>
+            <td><b>30</b></td>
+            <td><b>30</b></td>
+            <td><b>100%</b></td>
+            <td><span class="pill pill-pass">PASS</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="section">
+      <h2>Features Tested</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Feature Category</th>
+            <th>Feature Name</th>
+            <th>Status</th>
+            <th>Test Cases</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>Single Review Analysis</td><td>Review text normalization and prediction flow</td><td class="status-pass">TESTED</td><td>4</td></tr>
+          <tr><td>Single Review Analysis</td><td>Ensemble majority vote path</td><td class="status-pass">TESTED</td><td>2</td></tr>
+          <tr><td>CSV Batch</td><td>Review column detection and invalid row handling</td><td class="status-pass">TESTED</td><td>2</td></tr>
+          <tr><td>CSV Batch</td><td>Batch analysis loop and summary generation logic</td><td class="status-pass">TESTED</td><td>1</td></tr>
+          <tr><td>Amazon Review Feature</td><td>ASIN extraction from URL and direct input</td><td class="status-pass">TESTED</td><td>1</td></tr>
+          <tr><td>Amazon Review Feature</td><td>Amazon review analysis pipeline</td><td class="status-pass">TESTED</td><td>1</td></tr>
+          <tr><td>Walmart Review Feature</td><td>Product ID extraction from URL and direct input</td><td class="status-pass">TESTED</td><td>1</td></tr>
+          <tr><td>Walmart Review Feature</td><td>Walmart review analysis + badge parsing</td><td class="status-pass">TESTED</td><td>1</td></tr>
+          <tr><td>Model Management</td><td>Model loading and metrics loading fallback cases</td><td class="status-pass">TESTED</td><td>4</td></tr>
+          <tr><td>Scraper Error Handling</td><td>404/API error/exception handling behavior</td><td class="status-pass">TESTED</td><td>3</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="section">
+      <h2>API Endpoint Validation</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Endpoint</th>
+            <th>Type</th>
+            <th>Validation Method</th>
+            <th>Result</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>https://api.scraperapi.com/structured/amazon/product/v1</td>
+            <td>Third-party API</td>
+            <td>Live smoke check with ASIN B07FTKQ97Q (HTTP + JSON payload check)</td>
+            <td class="status-pass">PASS (HTTP 200, reviews key found)</td>
+          </tr>
+          <tr>
+            <td>https://api.scraperapi.com/structured/walmart/review/v1</td>
+            <td>Third-party API</td>
+            <td>Live smoke check with Product ID 12417832 (HTTP + JSON payload check)</td>
+            <td class="status-pass">PASS (HTTP 200, reviews key found)</td>
+          </tr>
+          <tr>
+            <td>Internal REST API endpoints</td>
+            <td>Application API</td>
+            <td>Codebase scan of Python modules and routes</td>
+            <td class="status-info">No internal REST endpoints implemented in current project</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="section">
+      <h2>Authentication Test Cases</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Auth Test Case</th>
+            <th>Expected</th>
+            <th>Observed</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>User login endpoint validation</td>
+            <td>Login API should exist and return token/session</td>
+            <td>No auth endpoint/module found in current repository</td>
+            <td><span class="pill pill-warn">NOT APPLICABLE (GAP)</span></td>
+          </tr>
+          <tr>
+            <td>User signup endpoint validation</td>
+            <td>Signup API should create account with validation</td>
+            <td>No signup route found in current repository</td>
+            <td><span class="pill pill-warn">NOT APPLICABLE (GAP)</span></td>
+          </tr>
+          <tr>
+            <td>Token/session authorization checks</td>
+            <td>Protected endpoints should enforce auth</td>
+            <td>No auth middleware or token flow found</td>
+            <td><span class="pill pill-warn">NOT APPLICABLE (GAP)</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="section">
+      <h2>Artifacts and Evidence</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Artifact</th>
+            <th>Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>test-results/junit.xml</td>
+            <td>Pytest JUnit result file showing 28 passed, 0 failed, 0 errors.</td>
+          </tr>
+          <tr>
+            <td>frss/tests/</td>
+            <td>Automated test suite added for utilities, predictor, model handler, scraper, and page logic.</td>
+          </tr>
+          <tr>
+            <td>Live API smoke output</td>
+            <td>Amazon and Walmart ScraperAPI endpoints returned HTTP 200 and review payload keys.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="foot">
+      Generated on April 23, 2026 for APIVERSE quality verification. Result: implemented project scope validated successfully with a documented authentication-scope gap.
+    </div>
+  </div>
+</body>
+</html>

@@ -51,6 +51,7 @@ def remove_read_more_patterns(text: str) -> str:
     text = re.sub(r"\s*read\s+more\s*$", "", text, flags=re.IGNORECASE)
     text = re.sub(r"\s*\.\.\.\s*read\s+more\s*$", "", text, flags=re.IGNORECASE)
     text = re.sub(r"\s*see\s+more\s*$", "", text, flags=re.IGNORECASE)
+    text = re.sub(r"\s*(?:\.\.\.|\.)\s*$", "", text)
     return text.strip()
 
 
@@ -172,5 +173,4 @@ def format_metric(value, decimal_places: int = 4) -> str:
     """
     if isinstance(value, float):
         return f"{value:.{decimal_places}f}"
-    return str(value)
     return str(value)
