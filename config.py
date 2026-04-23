@@ -74,9 +74,18 @@ PREDICTIONS = {
 # ==================== TRUST LEVELS ====================
 
 TRUST_LEVELS = {
-    "trustworthy": {"threshold": 70, "emoji": "🟢", "label": "TRUSTWORTHY"},
-    "moderate": {"threshold": 50, "emoji": "🟡", "label": "MODERATE"},
-    "suspicious": {"threshold": 0, "emoji": "🔴", "label": "SUSPICIOUS"},
+    "genuine": {"threshold": 95, "label": "Genuine Reviews"},
+    "authentic": {"threshold": 90, "label": "Authentic Reviews"},
+    "mostly_genuine": {"threshold": 85, "label": "Mostly Genuine Reviews"},
+    "largely_genuine": {"threshold": 80, "label": "Largely Genuine Reviews"},
+    "generally_genuine": {"threshold": 75, "label": "Generally Genuine Reviews"},
+    "balanced": {"threshold": 65, "label": "Balanced Reviews"},
+    "mixed": {"threshold": 55, "label": "Mixed Reviews"},
+    "some_fake": {"threshold": 45, "label": "Some Fake Reviews Detected"},
+    "many_fake": {"threshold": 35, "label": "Many Fake Reviews Detected"},
+    "high_fake": {"threshold": 25, "label": "High Fake Review Presence"},
+    "mostly_fake": {"threshold": 15, "label": "Mostly Fake Reviews"},
+    "fake_dominated": {"threshold": 0, "label": "Fake Reviews Dominated"},
 }
 
 # ==================== COLORS ====================

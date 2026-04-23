@@ -14,7 +14,6 @@ from pages.csv_batch import show_csv_batch_page
 from pages.single_review import show_single_review_page
 from pages.walmart_product import show_walmart_product_page
 
-
 PAGE_ROUTES = {
     "home": "Home",
     "single-review": "Single Review",
@@ -100,45 +99,86 @@ __THEME_VARS__
                 margin-bottom: 0.35rem;
             }
 
-            [data-testid="stToggle"] {
-                background: var(--card);
-                border: 1px solid var(--border);
+            /* ===== DARK MODE TOGGLE STYLING ===== */
+            .theme-toggle-wrap {
+                display: flex;
+                justify-content: flex-end;
+                align-items: center;
+                margin-bottom: 0.35rem;
+            }
+
+            .theme-toggle-wrap [data-testid="stToggle"] {
+                background: linear-gradient(135deg, var(--card) 0%, rgba(255,255,255,0.08) 100%);
+                border: 1.5px solid var(--border);
                 border-radius: 999px;
-                padding: 0.15rem 0.65rem 0.2rem;
-                box-shadow: var(--shadow);
+                padding: 0.3rem 1rem 0.35rem;
+                box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255,255,255,0.2);
+                backdrop-filter: blur(12px);
+                transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            }
+
+            .theme-toggle-wrap [data-testid="stToggle"]:hover {
+                border-color: var(--primary);
+                box-shadow: 0 12px 32px rgba(10, 165, 161, 0.15), inset 0 1px 0 rgba(255,255,255,0.3);
+                transform: translateY(-2px);
+            }
+
+            .theme-toggle-wrap [data-testid="stToggle"] label {
+                font-size: 0.9rem;
+                font-weight: 600;
+                color: var(--fg);
+                margin: 0;
+                letter-spacing: 0.3px;
+            }
+
+            .theme-toggle-wrap [data-testid="stToggle"] span {
+                color: var(--fg) !important;
+            }
+
+            /* ===== LIGHT MODE SPECIFIC: Make toggle text visible ===== */
+            .stApp[data-theme="light"] .theme-toggle-wrap [data-testid="stToggle"] label,
+            .stApp[data-theme="light"] .theme-toggle-wrap [data-testid="stToggle"] span {
+                color: #0f1b22 !important;
             }
 
             .app-title {
-                font-size: clamp(3.2rem, 6vw, 4.6rem);
-                line-height: 1.1;
-                font-weight: 900;
+                font-size: clamp(3.4rem, 6.5vw, 4.8rem);
+                line-height: 1.05;
+                font-weight: 950;
                 color: var(--title);
-                margin: -0.25rem auto 1rem;
-                letter-spacing: -0.02em;
+                margin: -0.35rem auto 1.2rem;
+                letter-spacing: -0.025em;
                 text-align: center;
-                background: linear-gradient(135deg, var(--title) 0%, var(--primary) 100%);
+                background: linear-gradient(135deg, var(--title) 0%, var(--primary) 75%, var(--primary-glow) 100%);
                 -webkit-background-clip: text;
                 -webkit-text-fill-color: transparent;
                 background-clip: text;
                 display: block;
+                text-shadow: 0 2px 10px rgba(10, 165, 161, 0.1);
             }
 
             .nav {
                 display: flex;
                 justify-content: center;
                 align-items: center;
-                padding: 0.7rem 1rem;
-                border: 1px solid var(--border);
-                border-radius: 14px;
-                background: var(--card);
-                backdrop-filter: blur(8px);
-                margin-bottom: 1.5rem;
-                box-shadow: var(--shadow);
+                padding: 0.85rem 1.2rem;
+                border: 1.5px solid var(--border);
+                border-radius: 16px;
+                background: linear-gradient(135deg, var(--card) 0%, rgba(255,255,255,0.05) 100%);
+                backdrop-filter: blur(10px);
+                margin-bottom: 2rem;
+                box-shadow: 0 12px 40px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255,255,255,0.15);
+                transition: all 0.3s ease;
+            }
+
+            .nav:hover {
+                border-color: var(--primary);
+                box-shadow: 0 16px 48px rgba(10, 165, 161, 0.12), inset 0 1px 0 rgba(255,255,255,0.2);
             }
 
             .nav .links {
                 display: flex;
-                gap: 0.5rem;
+                gap: 0.6rem;
                 flex-wrap: wrap;
                 width: 100%;
                 justify-content: center;
@@ -148,49 +188,67 @@ __THEME_VARS__
                 margin-left: 0;
                 color: var(--muted);
                 text-decoration: none;
-                font-size: 0.92rem;
-                font-weight: 600;
-                padding: 0.48rem 0.9rem;
+                font-size: 0.95rem;
+                font-weight: 650;
+                padding: 0.55rem 1.1rem;
                 border-radius: 999px;
-                transition: all 0.18s ease;
+                transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+                letter-spacing: 0.2px;
             }
 
             .nav .links a.active {
                 color: #ffffff;
-                background: linear-gradient(135deg, var(--primary), var(--primary-glow));
+                background: linear-gradient(135deg, var(--primary) 0%, var(--primary-glow) 100%);
+                box-shadow: 0 8px 24px rgba(10, 165, 161, 0.3);
+                transform: translateY(-2px);
             }
 
             .nav .links a:hover {
                 color: var(--primary);
-                background: rgba(10, 165, 161, 0.08);
+                background: rgba(10, 165, 161, 0.12);
+                transform: translateY(-1px);
             }
 
             .hero {
                 text-align: center;
-                padding: 3rem 1rem 2rem;
-                background: radial-gradient(1200px 400px at 50% 0%, rgba(10, 165, 161, 0.10), transparent 60%);
-                border-radius: 20px;
-                border: 1px solid var(--border);
-                box-shadow: var(--shadow);
+                padding: 4rem 2rem 3rem;
+                background: linear-gradient(135deg, 
+                    rgba(10, 165, 161, 0.08) 0%, 
+                    transparent 50%,
+                    rgba(52, 212, 200, 0.06) 100%);
+                border-radius: 24px;
+                border: 1.5px solid var(--border);
+                box-shadow: 0 16px 48px rgba(0, 0, 0, 0.12), inset 0 1px 1px rgba(255,255,255,0.1);
+                backdrop-filter: blur(8px);
+                transition: all 0.3s ease;
+            }
+
+            .hero:hover {
+                border-color: var(--primary);
+                box-shadow: 0 20px 56px rgba(10, 165, 161, 0.15), inset 0 1px 1px rgba(255,255,255,0.15);
             }
 
             .hero .badge {
                 display: inline-block;
-                padding: 0.35rem 0.85rem;
+                padding: 0.45rem 1rem;
                 border-radius: 999px;
-                background: rgba(10, 165, 161, 0.10);
+                background: linear-gradient(135deg, rgba(10, 165, 161, 0.15), rgba(52, 212, 200, 0.08));
                 color: var(--primary);
-                font-size: 0.8rem;
-                font-weight: 600;
-                margin-bottom: 1rem;
+                font-size: 0.82rem;
+                font-weight: 700;
+                letter-spacing: 0.5px;
+                margin-bottom: 1.25rem;
+                border: 1px solid rgba(10, 165, 161, 0.3);
+                box-shadow: 0 4px 12px rgba(10, 165, 161, 0.15);
             }
 
             .hero h1 {
-                font-size: clamp(1.7rem, 3.8vw, 2.6rem);
-                line-height: 1.1;
-                font-weight: 800;
-                margin: 0 0 1rem;
+                font-size: clamp(1.8rem, 4vw, 2.8rem);
+                line-height: 1.15;
+                font-weight: 900;
+                margin: 0 0 1.2rem;
                 color: var(--fg);
+                letter-spacing: -0.01em;
             }
 
             .hero h1 .grad {
@@ -201,58 +259,80 @@ __THEME_VARS__
 
             .hero p {
                 color: var(--muted);
-                max-width: 680px;
+                max-width: 700px;
                 margin: 0 auto;
-                font-size: 1.05rem;
-                line-height: 1.6;
+                font-size: 1.08rem;
+                line-height: 1.7;
+                font-weight: 500;
             }
 
             .frs-stats {
                 display: grid;
                 grid-template-columns: repeat(3, 1fr);
-                gap: 1rem;
-                margin: 2rem 0;
+                gap: 1.25rem;
+                margin: 2.5rem 0;
             }
 
             @media (max-width: 768px) {
                 .frs-stats {
                     grid-template-columns: repeat(1, 1fr);
+                    gap: 1rem;
                 }
             }
 
             .frs-stat {
-                background: var(--card);
-                border: 1px solid var(--border);
-                border-radius: 14px;
-                padding: 1.25rem;
+                background: linear-gradient(135deg, var(--card) 0%, rgba(255,255,255,0.04) 100%);
+                border: 1.5px solid var(--border);
+                border-radius: 18px;
+                padding: 1.5rem 1.25rem;
                 text-align: center;
-                box-shadow: var(--shadow);
+                box-shadow: 0 12px 32px rgba(0, 0, 0, 0.08), inset 0 1px 1px rgba(255,255,255,0.1);
+                transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                backdrop-filter: blur(4px);
+            }
+
+            .frs-stat:hover {
+                transform: translateY(-6px);
+                border-color: var(--primary);
+                box-shadow: 0 16px 48px rgba(10, 165, 161, 0.2), inset 0 1px 1px rgba(255,255,255,0.15);
             }
 
             .frs-stat .value {
-                font-size: 1.8rem;
-                font-weight: 800;
-                color: var(--primary);
-                margin-bottom: 0.25rem;
+                font-size: 2rem;
+                font-weight: 900;
+                background: linear-gradient(135deg, var(--primary), var(--primary-glow));
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;
+                margin-bottom: 0.35rem;
+                letter-spacing: -0.01em;
             }
 
             .frs-stat .label {
                 color: var(--muted);
-                font-size: 0.85rem;
+                font-size: 0.88rem;
+                font-weight: 600;
+                letter-spacing: 0.3px;
             }
 
             .frs-section-title {
                 text-align: center;
-                font-size: 1.8rem;
-                font-weight: 700;
-                margin: 2.5rem 0 0.5rem;
+                font-size: 2rem;
+                font-weight: 900;
+                margin: 3rem 0 0.75rem;
                 color: var(--fg);
+                letter-spacing: -0.015em;
+                background: linear-gradient(90deg, var(--fg) 0%, var(--primary) 100%);
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;
             }
 
             .frs-section-sub {
                 text-align: center;
                 color: var(--muted);
-                margin-bottom: 1.75rem;
+                margin-bottom: 2rem;
+                font-size: 1.05rem;
+                font-weight: 500;
+                letter-spacing: 0.2px;
             }
 
             .frs-grid {
@@ -268,53 +348,67 @@ __THEME_VARS__
             }
 
             .frs-card {
-                background: var(--card);
-                border: 1px solid var(--border);
-                border-radius: 16px;
-                padding: 1.5rem;
+                background: linear-gradient(135deg, var(--card) 0%, rgba(255,255,255,0.05) 100%);
+                border: 1.5px solid var(--border);
+                border-radius: 18px;
+                padding: 1.75rem;
                 height: 100%;
-                transition: transform .2s ease, box-shadow .2s ease;
-                box-shadow: var(--shadow);
+                transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                box-shadow: 0 12px 32px rgba(0, 0, 0, 0.08), inset 0 1px 1px rgba(255,255,255,0.1);
+                backdrop-filter: blur(4px);
             }
 
             .frs-card:hover {
-                transform: translateY(-4px);
-                box-shadow: 0 18px 40px -18px rgba(10, 165, 161, 0.30);
+                transform: translateY(-8px) scaleX(1.01);
+                box-shadow: 0 24px 56px rgba(10, 165, 161, 0.25), inset 0 1px 1px rgba(255,255,255,0.15);
                 border-color: var(--primary);
             }
 
             .frs-card .badge {
-                width: 48px;
-                height: 48px;
-                border-radius: 12px;
+                width: 56px;
+                height: 56px;
+                border-radius: 14px;
                 display: flex;
                 align-items: center;
                 justify-content: center;
-                font-size: 1.5rem;
-                margin-bottom: 1rem;
+                font-size: 1.75rem;
+                margin-bottom: 1.2rem;
                 background: linear-gradient(135deg, var(--primary), var(--primary-glow));
                 color: #fff;
+                box-shadow: 0 8px 24px rgba(10, 165, 161, 0.3);
+                transition: all 0.3s ease;
+            }
+
+            .frs-card:hover .badge {
+                transform: scale(1.1) rotate(6deg);
+                box-shadow: 0 12px 32px rgba(10, 165, 161, 0.4);
             }
 
             .frs-card h3 {
-                margin: 0 0 .35rem;
+                margin: 0 0 0.5rem;
                 color: var(--fg);
-                font-size: 1.15rem;
+                font-size: 1.22rem;
+                font-weight: 800;
+                letter-spacing: -0.005em;
             }
 
             .frs-card p {
                 color: var(--muted);
-                font-size: 0.92rem;
+                font-size: 0.95rem;
                 margin: 0;
+                line-height: 1.6;
+                font-weight: 500;
             }
 
             .frs-footer {
                 text-align: center;
                 color: var(--muted);
-                font-size: 0.85rem;
-                padding: 2rem 0 1rem;
-                border-top: 1px solid var(--border);
-                margin-top: 3rem;
+                font-size: 0.88rem;
+                padding: 2.5rem 0 1.5rem;
+                border-top: 1.5px solid var(--border);
+                margin-top: 4rem;
+                font-weight: 500;
+                letter-spacing: 0.3px;
             }
 
             section[data-testid="stSidebar"] > div {
@@ -328,7 +422,9 @@ __THEME_VARS__
             }
 
         </style>
-        """.replace("__THEME_VARS__", theme_vars),
+        """.replace(
+            "__THEME_VARS__", theme_vars
+        ),
         unsafe_allow_html=True,
     )
 
@@ -388,6 +484,58 @@ __THEME_VARS__
         st.markdown(
             """
             <style>
+                /* ===== ABSOLUTE LIGHT MODE OVERRIDES ===== */
+                
+                /* Container level */
+                .theme-toggle-wrap {
+                    color: #0f1b22 !important;
+                }
+                
+                /* All text inside toggle */
+                .theme-toggle-wrap,
+                .theme-toggle-wrap *,
+                .theme-toggle-wrap div,
+                .theme-toggle-wrap label,
+                .theme-toggle-wrap span {
+                    color: #0f1b22 !important;
+                    fill: #0f1b22 !important;
+                }
+                
+                /* Toggle specific overrides */
+                .theme-toggle-wrap [data-testid="stToggle"],
+                div[data-testid="stToggle"] {
+                    background: linear-gradient(135deg, rgba(255,255,255,0.98) 0%, rgba(245,248,252,0.95) 100%) !important;
+                    border: 1.5px solid #d6e0ea !important;
+                }
+
+                .theme-toggle-wrap [data-testid="stToggle"] label,
+                div[data-testid="stToggle"] label,
+                [data-testid="stToggle"] label {
+                    color: #0f1b22 !important;
+                    font-weight: 900 !important;
+                    visibility: visible !important;
+                    opacity: 1 !important;
+                }
+
+                .theme-toggle-wrap [data-testid="stToggle"] span,
+                div[data-testid="stToggle"] span,
+                [data-testid="stToggle"] span {
+                    color: #0f1b22 !important;
+                    font-weight: 800 !important;
+                    visibility: visible !important;
+                    opacity: 1 !important;
+                }
+                
+                /* Widget labels */
+                div[data-testid="stWidgetLabel"],
+                div[data-testid="stWidgetLabel"] label,
+                div[data-testid="stWidgetLabel"] span,
+                label[data-testid="stWidgetLabel"] {
+                    color: #0f1b22 !important;
+                    font-weight: 600 !important;
+                }
+
+                /* Input elements styling */
                 textarea,
                 input,
                 div[data-baseweb="select"] input,
@@ -400,6 +548,27 @@ __THEME_VARS__
                 textarea::placeholder,
                 input::placeholder {
                     color: rgba(91, 107, 117, 0.8) !important;
+                }
+
+                /* Sidebar text colors - ensure visible */
+                section[data-testid="stSidebar"] label,
+                section[data-testid="stSidebar"] span,
+                section[data-testid="stSidebar"] .stMarkdown,
+                section[data-testid="stSidebar"] .stCaption,
+                section[data-testid="stSidebar"] .stInfo,
+                section[data-testid="stSidebar"] .stCheckbox label,
+                section[data-testid="stSidebar"] .stSelectbox label {
+                    color: #0f1b22 !important;
+                    visibility: visible !important;
+                    opacity: 1 !important;
+                }
+
+                div[data-testid="stTextArea"] label,
+                div[data-testid="stTextInput"] label,
+                .stTextArea label,
+                .stTextInput label {
+                    color: #0f1b22 !important;
+                    font-weight: 600 !important;
                 }
             </style>
             """,
@@ -417,42 +586,39 @@ def get_active_page() -> str:
 
 
 def get_active_theme() -> bool:
-    """Return dark mode state from query params."""
-    theme = st.query_params.get("theme", "light")
-    if isinstance(theme, list):
-        theme = theme[0] if theme else "light"
-
-    return str(theme).lower() == "dark"
+    """Return dark mode state from session state without reinitializing."""
+    # Only read, never reinitialize - let render_theme_toggle handle that
+    return st.session_state.get("ui_dark_mode", False)
 
 
 def render_theme_toggle() -> bool:
     """Render theme toggle at top-right and return current dark mode state."""
+    # Initialize session state if not already set
     if "ui_dark_mode" not in st.session_state:
-        st.session_state["ui_dark_mode"] = get_active_theme()
+        st.session_state["ui_dark_mode"] = False  # Default: light mode
 
     _, right_col = st.columns([0.82, 0.18])
     with right_col:
         st.markdown("<div class='theme-toggle-wrap'>", unsafe_allow_html=True)
-        dark_mode = st.toggle("Dark Mode", key="ui_dark_mode")
+        # Toggle uses session_state directly - persists across page changes
+        dark_mode = st.toggle(
+            "Dark Mode", value=st.session_state["ui_dark_mode"], key="ui_dark_mode"
+        )
         st.markdown("</div>", unsafe_allow_html=True)
-
-    desired_theme = "dark" if dark_mode else "light"
-    if st.query_params.get("theme") != desired_theme:
-        st.query_params["theme"] = desired_theme
 
     return bool(dark_mode)
 
 
-def _build_page_href(page_key: str, dark_mode: bool) -> str:
-    theme = "dark" if dark_mode else "light"
-    return f"?page={page_key}&theme={theme}"
+def _build_page_href(page_key: str) -> str:
+    # Only use page param - theme is managed by session_state
+    return f"?page={page_key}"
 
 
 def render_navbar(active_page: str, dark_mode: bool) -> None:
     """Render the top navigation bar."""
     nav_items = []
     for page_key, label in PAGE_ROUTES.items():
-        href = _build_page_href(page_key, dark_mode)
+        href = _build_page_href(page_key)
         active_class = "active" if page_key == active_page else ""
         nav_items.append(
             f'<a class="{active_class}" href="{href}" target="_self">{label}</a>'
@@ -546,7 +712,9 @@ def render_sidebar_home() -> None:
         "Upload or paste review text, then compare ensemble predictions and confidence."
     )
     st.sidebar.markdown("---")
-    st.sidebar.caption("Designed for fast fake-review screening across multiple sources.")
+    st.sidebar.caption(
+        "Designed for fast fake-review screening across multiple sources."
+    )
 
 
 def load_resources() -> tuple:

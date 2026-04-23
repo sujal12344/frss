@@ -61,7 +61,9 @@ def test_predict_review_ensemble_majority_vote():
         "b": ProbModel(pred=1, prob=0.7),
         "c": ProbModel(pred=0, prob=0.6),
     }
-    pred, conf, individual, times, total = predict_review("Nice product", models, ensemble=True)
+    pred, conf, individual, times, total = predict_review(
+        "Nice product", models, ensemble=True
+    )
     assert pred == 1
     assert len(individual) == 3
     assert 0.0 <= conf <= 1.0
@@ -87,7 +89,9 @@ def test_predict_review_empty_text_returns_defaults():
 
 
 def test_predict_review_handles_all_model_failures():
-    pred, conf, individual, times, total = predict_review("text", {"bad": BrokenModel()})
+    pred, conf, individual, times, total = predict_review(
+        "text", {"bad": BrokenModel()}
+    )
     assert pred == 0
     assert conf == 0.0
     assert individual == {}
@@ -96,7 +100,9 @@ def test_predict_review_handles_all_model_failures():
 
 
 def test_ensemble_prediction_helper():
-    pred, conf = _ensemble_prediction({"a": 1, "b": 0, "c": 1}, {"a": 0.7, "b": 0.5, "c": 0.9})
+    pred, conf = _ensemble_prediction(
+        {"a": 1, "b": 0, "c": 1}, {"a": 0.7, "b": 0.5, "c": 0.9}
+    )
     assert pred == 1
     assert abs(conf - 0.7) < 1e-9
 
@@ -104,6 +110,10 @@ def test_ensemble_prediction_helper():
 def test_prediction_label_and_trust_level():
     assert get_prediction_label(1)["full_label"] == "Genuine"
     assert get_prediction_label(0)["full_label"] == "Fake"
-    assert get_trust_level(80)["label"] == "TRUSTWORTHY"
-    assert get_trust_level(55)["label"] == "MODERATE"
-    assert get_trust_level(20)["label"] == "SUSPICIOUS"
+    # Test with dynamic thresholding - 12 levels
+    assert "Genuine" in get_trust_level(96)["label"]
+    assert (
+        "Balanced" in get_trust_level(65)["label"]
+        or "Mixed" in get_trust_level(65)["label"]
+    )
+    assert "Fake" in get_trust_level(10)["label"]

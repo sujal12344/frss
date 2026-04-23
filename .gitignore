@@ -1,2 +1,7 @@
 __pycache__/
 *.pyc
+dataset/
+cache_dir/
+logs/
+.venv/
+env/

@@ -287,7 +287,11 @@ def display_summary_metrics(
 
     genuine_pct = (genuine_count / total_reviews * 100) if total_reviews > 0 else 0
     fake_pct = (fake_count / total_reviews * 100) if total_reviews > 0 else 0
-    trust_level = get_trust_level(genuine_pct)
+
+    # Pass total_reviews and default confidence for dynamic thresholding
+    trust_level = get_trust_level(
+        genuine_pct, total_reviews=total_reviews, confidence=0.7
+    )
 
     col1, col2, col3, col4 = st.columns(4)
 
@@ -298,6 +302,11 @@ def display_summary_metrics(
     with col3:
         st.metric("❌ Fake", f"{fake_count} ({fake_pct:.1f}%)")
     with col4:
-        st.markdown(f"### {trust_level['emoji']} {trust_level['label']}")
-    with col4:
-        st.markdown(f"### {trust_level['emoji']} {trust_level['label']}")
+        st.markdown(
+            f"<h3 style='text-align: center;'>{trust_level['label']}</h3>",
+            unsafe_allow_html=True,
+        )
+        st.markdown(
+            f"<p style='text-align: center; font-size: 12px; color: #666;'>Authenticity Rating</p>",
+            unsafe_allow_html=True,
+        )

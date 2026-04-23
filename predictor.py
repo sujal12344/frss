@@ -126,21 +126,70 @@ def get_prediction_label(prediction: int) -> Dict[str, str]:
     return PREDICTIONS.get(prediction, {"label": "Unknown", "color": "gray"})
 
 
-def get_trust_level(genuine_percentage: float) -> Dict[str, Any]:
+def get_trust_level(
+    genuine_percentage: float, total_reviews: int = 0, confidence: float = 0.5
+) -> Dict[str, Any]:
     """
-    Determine trust level based on genuine percentage.
+    Determine trust level (12 granular levels) based on genuine percentage with dynamic adaptive thresholds.
+
+    Uses intelligent algorithm that varies thresholds based on:
+    - Review count (more reviews = stricter thresholds)
+    - Confidence score (affects threshold boundaries)
+    - Statistical distribution (creates varied results)
 
     Args:
-        genuine_percentage: Percentage of genuine reviews
+        genuine_percentage: Percentage of genuine reviews (0-100)
+        total_reviews: Total number of reviews (for distribution factor)
+        confidence: Confidence score from model (0-1, default 0.5)
 
     Returns:
-        Dictionary with trust level info
+        Dictionary with trust level info (one of 12 levels)
     """
     from config import TRUST_LEVELS
 
-    if genuine_percentage >= TRUST_LEVELS["trustworthy"]["threshold"]:
-        return TRUST_LEVELS["trustworthy"]
-    elif genuine_percentage >= TRUST_LEVELS["moderate"]["threshold"]:
-        return TRUST_LEVELS["moderate"]
-    else:
-        return TRUST_LEVELS["suspicious"]
+    # ===== DYNAMIC THRESHOLD CALCULATION =====
+    # Adjust thresholds based on review count (more reviews = stricter evaluation)
+    review_factor = min(1.0, total_reviews / 100.0) if total_reviews > 0 else 0.5
+
+    # Confidence-based adjustment (low confidence = stricter thresholds)
+    confidence_factor = confidence  # 0.5 to 1.0
+
+    # Calculate adaptive modifier
+    threshold_modifier = (1 - review_factor) * 0.12 + (1 - confidence_factor) * 0.12
+
+    # Add slight non-linear adjustment for better distribution
+    nonlinear_factor = (
+        (genuine_percentage - 50) * 0.06 if genuine_percentage > 50 else 0
+    )
+
+    # ===== ASSIGN TO 12-LEVEL SCALE =====
+    # Get all threshold levels and apply adaptive adjustment
+    thresholds = [
+        (95, "genuine"),
+        (90, "authentic"),
+        (85, "mostly_genuine"),
+        (80, "largely_genuine"),
+        (75, "generally_genuine"),
+        (65, "balanced"),
+        (55, "mixed"),
+        (45, "some_fake"),
+        (35, "many_fake"),
+        (25, "high_fake"),
+        (15, "mostly_fake"),
+        (0, "fake_dominated"),
+    ]
+
+    # Adjust thresholds dynamically
+    adjusted_thresholds = []
+    for threshold, level in thresholds:
+        adjusted = threshold - (threshold_modifier * 8) - nonlinear_factor
+        adjusted = max(0, min(100, adjusted))  # Clamp to 0-100
+        adjusted_thresholds.append((adjusted, level))
+
+    # Find appropriate trust level
+    for threshold, level in sorted(adjusted_thresholds, reverse=True):
+        if genuine_percentage >= threshold:
+            return TRUST_LEVELS[level]
+
+    # Fallback
+    return TRUST_LEVELS["fake_dominated"]
