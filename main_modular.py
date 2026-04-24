@@ -155,6 +155,7 @@ __THEME_VARS__
                 background-clip: text;
                 display: block;
                 text-shadow: 0 2px 10px rgba(10, 165, 161, 0.1);
+                transform: translateY(-28px);
             }
 
             .nav {
@@ -595,7 +596,7 @@ def render_theme_toggle() -> bool:
     """Render theme toggle at top-right and return current dark mode state."""
     # Initialize session state if not already set
     if "ui_dark_mode" not in st.session_state:
-        st.session_state["ui_dark_mode"] = False  # Default: light mode
+        st.session_state["ui_dark_mode"] = True  # Default: light mode
 
     _, right_col = st.columns([0.82, 0.18])
     with right_col:
@@ -626,7 +627,9 @@ def render_navbar(active_page: str, dark_mode: bool) -> None:
 
     st.markdown(
         f"""
-        <h1 class="app-title">Fake Review Detector</h1>
+        <h1 class="app-title" style="
+    font-size: 60px;
+">Fake Review Detector</h1>
         <div class="nav">
             <div class="links">
                 {''.join(nav_items)}
@@ -849,7 +852,7 @@ def show_footer() -> None:
 def main() -> None:
     """Main application entry point."""
     initialize_app()
-    dark_mode = render_theme_toggle()
+    dark_mode = True
     apply_global_styles(dark_mode)
 
     current_page = get_active_page()
