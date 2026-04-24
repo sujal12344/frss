@@ -1,7 +1,12 @@
 __pycache__/
 *.pyc
-dataset/
+dataset/*
 cache_dir/
 logs/
 .venv/
 env/
+node_modules/
+dist/
+build/
+*.egg-info/
+*.log
